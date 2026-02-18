@@ -14,12 +14,33 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/api', () => ({
   api: {
-    movies: {
-      searchMovies: vi.fn().mockResolvedValue({ Response: 'False', Error: 'Too many results.' }),
-      getByIdOrTitle: vi.fn(),
+    media: {
+      discover: vi
+        .fn()
+        .mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      search: vi
+        .fn()
+        .mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      getDetails: vi.fn(),
+      getGenres: vi.fn().mockResolvedValue({ genres: [] }),
     },
   },
 }))
+
+const mockObserve = vi.fn()
+const mockDisconnect = vi.fn()
+
+class MockIntersectionObserver {
+  observe = mockObserve
+  unobserve = vi.fn()
+  disconnect = mockDisconnect
+  constructor(
+    public callback: IntersectionObserverCallback,
+    public options?: IntersectionObserverInit,
+  ) {}
+}
+
+vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
 
 import { useMoviesStore } from '@/stores/moviesStore'
 
@@ -36,15 +57,22 @@ function mountPage() {
           template: '<div class="empty">{{ title }}</div>',
           props: ['title', 'description', 'icon'],
         },
-        UButton: {
-          template: '<button @click="$emit(\'click\')">{{ label }}</button>',
-          props: ['label', 'loading'],
-          emits: ['click'],
-        },
-        MovieCard: { template: '<div class="movie-card" />', props: ['movie'] },
+        UIcon: { template: '<span class="icon" />' },
+        MovieCard: { template: '<div class="movie-card" />', props: ['movie', 'mediaType'] },
       },
     },
   })
+}
+
+const MOCK_ITEM = {
+  id: 272,
+  title: 'Batman Begins',
+  overview: 'After training...',
+  poster_path: '/poster.jpg',
+  backdrop_path: null,
+  genre_ids: [28],
+  vote_average: 7.7,
+  release_date: '2005-06-15',
 }
 
 describe('HomePage', () => {
@@ -53,18 +81,13 @@ describe('HomePage', () => {
     pinia = createPinia()
     setActivePinia(pinia)
     mockPush.mockClear()
-  })
-
-  it('shows "Search for movies" empty state when no search query', async () => {
-    const wrapper = mountPage()
-    await nextTick()
-    const empties = wrapper.findAll('.empty')
-    const searchEmpty = empties.find((el) => el.text().includes('Search for movies'))
-    expect(searchEmpty).toBeDefined()
+    mockObserve.mockClear()
+    mockDisconnect.mockClear()
   })
 
   it('shows error alert when store has an error', async () => {
     const wrapper = mountPage()
+    await flushPromises()
     const store = useMoviesStore()
     store.error = 'Something went wrong'
     await nextTick()
@@ -75,8 +98,10 @@ describe('HomePage', () => {
 
   it('shows loading skeletons when loading with no results', async () => {
     const wrapper = mountPage()
+    await flushPromises()
     const store = useMoviesStore()
     store.loading = true
+    store.items = []
     await nextTick()
     const skeletons = wrapper.findAll('.skeleton')
     expect(skeletons.length).toBeGreaterThan(0)
@@ -84,67 +109,47 @@ describe('HomePage', () => {
 
   it('shows movie cards when results exist', async () => {
     const wrapper = mountPage()
+    await flushPromises()
     const store = useMoviesStore()
-    store.movies = [
-      {
-        Title: 'Batman',
-        Year: '1989',
-        imdbID: 'tt0096895',
-        Type: 'movie',
-        Poster: 'https://example.com/poster.jpg',
-      },
-    ]
-    store.totalResults = 1
+    store.items = [MOCK_ITEM]
     await nextTick()
     expect(wrapper.findAll('.movie-card')).toHaveLength(1)
   })
 
-  it('shows "No results found" when search exists but no results', async () => {
-    mockQuery.value.search = 'xyznonexistent'
+  it('shows "No results found" when no results and not loading', async () => {
     const wrapper = mountPage()
-    const store = useMoviesStore()
     await flushPromises()
+    const store = useMoviesStore()
     store.error = null
     store.loading = false
+    store.items = []
     await nextTick()
     const empties = wrapper.findAll('.empty')
     const noResults = empties.find((el) => el.text().includes('No results found'))
     expect(noResults).toBeDefined()
   })
 
-  it('shows load more button when more results are available', async () => {
+  it('shows loader when more results are available', async () => {
     const wrapper = mountPage()
+    await flushPromises()
     const store = useMoviesStore()
-    store.movies = [
-      {
-        Title: 'Batman',
-        Year: '1989',
-        imdbID: 'tt0096895',
-        Type: 'movie',
-        Poster: 'https://example.com/poster.jpg',
-      },
-    ]
-    store.totalResults = 20
+    store.items = [MOCK_ITEM]
+    store.totalPages = 3
+    store.currentPage = 1
     await nextTick()
-    const button = wrapper.find('button')
-    expect(button.exists()).toBe(true)
-    expect(button.text()).toContain('Load more')
+    const loader = wrapper.find('.icon')
+    expect(loader.exists()).toBe(true)
   })
 
-  it('hides load more button when all results are loaded', async () => {
+  it('hides loader when all results are loaded', async () => {
     const wrapper = mountPage()
+    await flushPromises()
     const store = useMoviesStore()
-    store.movies = [
-      {
-        Title: 'Batman',
-        Year: '1989',
-        imdbID: 'tt0096895',
-        Type: 'movie',
-        Poster: 'https://example.com/poster.jpg',
-      },
-    ]
-    store.totalResults = 1
+    store.items = [MOCK_ITEM]
+    store.totalPages = 1
+    store.currentPage = 1
     await nextTick()
-    expect(wrapper.find('button').exists()).toBe(false)
+    const loader = wrapper.find('.icon')
+    expect(loader.exists()).toBe(false)
   })
 })

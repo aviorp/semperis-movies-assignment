@@ -17,13 +17,13 @@ export default [
     ],
   },
   {
-    path: '/movie',
+    path: '/:mediaType(movie|tv)',
     component: () => import('@/layouts/blank-layout.vue'),
     children: [
       {
-        path: ':id',
-        name: 'movie-detail',
-        component: () => import('@/pages/movie-detail-page.vue'),
+        path: ':id(\\d+)',
+        name: 'media-detail',
+        component: () => import('@/pages/movie-detail/movie-detail-page.vue'),
       },
     ],
   },

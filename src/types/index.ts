@@ -1,71 +1,113 @@
-export interface BaseMovieSearchParams {
-  apiKey: string // API key for authentication
-  y?: string // Year of release
-  type: MovieType // Type of result to return
+export type MediaType = 'movie' | 'tv'
+
+export interface Genre {
+  id: number
+  name: string
 }
 
-export interface SearchMovieParams extends BaseMovieSearchParams {
-  i?: string // IMDb ID of the movie
-  s: string // Movie String to search for
-  page?: number // Page number to return (for pagination)
+export interface GenreListResponse {
+  genres: Genre[]
 }
 
-export interface SearchByIdOrTitleParams extends BaseMovieSearchParams {
-  i?: string // IMDb ID of the movie
-  plot: PlotOptions // Plot length (short or full)
+export interface BaseMedia {
+  id: number
+  overview: string
+  poster_path: string | null
+  backdrop_path: string | null
+  vote_average: number
 }
 
-export type MovieType = 'movie' | 'series' | 'episode'
-
-export interface MovieDetails {
-  Title: string
-  Year: string
-  Rated: string
-  Released: string
-  Runtime: string
-  Genre: string
-  Director: string
-  Writer: string
-  Actors: string
-  Plot: string
-  Language: string
-  Country: string
-  Awards: string
-  Poster: string
-  Ratings: {
-    Source: string
-    Value: string
-  }[]
-  Metascore: string
-  imdbRating: string
-  imdbVotes: string
-  imdbID: string
-  Type: MovieType
-  DVD: string
-  BoxOffice: string
-  Production: string
-  Website: string
+export interface MediaListItem extends BaseMedia {
+  title?: string
+  name?: string
+  genre_ids: number[]
+  release_date?: string
+  first_air_date?: string
+  media_type?: MediaType
 }
 
-export type SearchMovieResult = Pick<MovieDetails, 'Title' | 'Year' | 'imdbID' | 'Type' | 'Poster'>
-
-export type PlotOptions = 'short' | 'full'
-
-export interface ApiErrorResponse {
-  Response: 'False'
-  Error: string
+export interface CastMember {
+  id: number
+  name: string
+  character: string
+  profile_path: string | null
+  order: number
 }
 
-export interface SearchMoviesSuccessResponse {
-  Response: 'True'
-  Search: SearchMovieResult[]
-  totalResults: string
+export interface CrewMember {
+  id: number
+  name: string
+  job: string
+  department: string
+  profile_path: string | null
 }
 
-export type SearchMoviesResponse = SearchMoviesSuccessResponse | ApiErrorResponse
-
-export interface MovieDetailsSuccessResponse extends MovieDetails {
-  Response: 'True'
+export interface Credits {
+  cast: CastMember[]
+  crew: CrewMember[]
 }
 
-export type MovieDetailsResponse = MovieDetailsSuccessResponse | ApiErrorResponse
+export interface Creator {
+  id: number
+  name: string
+  profile_path: string | null
+}
+
+export interface BaseMediaDetails extends BaseMedia {
+  genres: Genre[]
+  vote_count: number
+  popularity: number
+  homepage: string | null
+  tagline: string | null
+  status: string
+  credits?: Credits
+}
+
+export interface MovieDetails extends BaseMediaDetails {
+  title: string
+  release_date: string
+  runtime: number | null
+  budget: number
+  revenue: number
+  imdb_id: string | null
+}
+
+export interface TvDetails extends BaseMediaDetails {
+  name: string
+  first_air_date: string
+  last_air_date: string
+  number_of_seasons: number
+  number_of_episodes: number
+  episode_run_time: number[]
+  created_by: Creator[]
+}
+
+export interface MediaDetailsMap {
+  movie: MovieDetails
+  tv: TvDetails
+}
+
+export interface PaginatedResponse<T> {
+  page: number
+  results: T[]
+  total_pages: number
+  total_results: number
+}
+
+interface PaginationParams {
+  page?: number
+}
+
+export interface DiscoverParams extends PaginationParams {
+  with_genres?: string
+  sort_by?: string
+  'primary_release_date.gte'?: string
+  'primary_release_date.lte'?: string
+  'first_air_date.gte'?: string
+  'first_air_date.lte'?: string
+  'vote_average.gte'?: number
+}
+
+export interface SearchParams extends PaginationParams {
+  query: string
+}

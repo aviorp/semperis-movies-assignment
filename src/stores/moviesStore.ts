@@ -1,56 +1,76 @@
-import type { MovieDetails, SearchMovieResult } from '@/types'
+import type { DiscoverParams, MediaListItem, MediaType, MovieDetails, TvDetails } from '@/types'
 import { api } from '@/api'
-import { handleError } from '@/utils/handleError'
+import { ERA_DATE_RANGES } from '@/utils/constants'
+import { handleError } from '@/utils'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useFiltersStore } from './filtersStore'
 
+function buildDiscoverParams(opts: {
+  page: number
+  genres: string
+  era: string
+  minRating: string
+  mediaType: MediaType
+}): DiscoverParams {
+  const params: DiscoverParams = { page: opts.page }
+
+  if (opts.genres) {
+    params.with_genres = opts.genres
+  }
+
+  const eraRange = ERA_DATE_RANGES[opts.era]
+  if (eraRange) {
+    if (opts.mediaType === 'movie') {
+      params['primary_release_date.gte'] = eraRange.gte
+      params['primary_release_date.lte'] = eraRange.lte
+    } else {
+      params['first_air_date.gte'] = eraRange.gte
+      params['first_air_date.lte'] = eraRange.lte
+    }
+  }
+
+  if (opts.minRating) {
+    params['vote_average.gte'] = Number(opts.minRating)
+  }
+
+  return params
+}
+
 export const useMoviesStore = defineStore('movies', () => {
   const filtersStore = useFiltersStore()
 
-  const movies = ref<SearchMovieResult[]>([])
-  const totalResults = ref(0)
+  const items = ref<MediaListItem[]>([])
+  const totalPages = ref(0)
   const currentPage = ref(1)
-  const selectedMovie = ref<MovieDetails | null>(null)
+  const selectedMedia = ref<MovieDetails | TvDetails | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const hasMore = computed(() => movies.value.length < totalResults.value)
+  const hasMore = computed(() => currentPage.value < totalPages.value)
 
-  async function searchMovies(page = 1) {
+  async function fetchItems(page = 1) {
     loading.value = true
     error.value = null
 
     try {
-      const { filters, search } = filtersStore
-      const response = await api.movies.searchMovies({
-        s: search,
-        type: filters.type,
-        ...(filters.year && { y: filters.year }),
-        page,
-      })
-
-      if (response.Response === 'False') {
-        error.value = response.Error
-        if (page === 1) {
-          movies.value = []
-          totalResults.value = 0
-        }
-        return
-      }
+      const { search, mediaType, genres, era, minRating } = filtersStore
+      const { results, total_pages } = search
+        ? await api.media.search(mediaType, { query: search, page })
+        : await api.media.discover(mediaType, buildDiscoverParams({ page, genres, era, minRating, mediaType }))
 
       if (page === 1) {
-        movies.value = response.Search
+        items.value = results
       } else {
-        movies.value = [...movies.value, ...response.Search]
+        items.value = [...items.value, ...results]
       }
-      totalResults.value = Number(response.totalResults)
+      totalPages.value = total_pages
       currentPage.value = page
     } catch (e) {
-      error.value = handleError(e, 'Failed to fetch movies')
+      error.value = handleError(e)
       if (page === 1) {
-        movies.value = []
-        totalResults.value = 0
+        items.value = []
+        totalPages.value = 0
       }
     } finally {
       loading.value = false
@@ -58,66 +78,52 @@ export const useMoviesStore = defineStore('movies', () => {
   }
 
   async function loadMore() {
-    await searchMovies(currentPage.value + 1)
+    await fetchItems(currentPage.value + 1)
   }
 
-  async function fetchMovieDetails(imdbId: string) {
+  async function fetchMediaDetails(mediaType: MediaType, id: number) {
     loading.value = true
     error.value = null
 
     try {
-      const { filters } = filtersStore
-      const response = await api.movies.getByIdOrTitle({
-        i: imdbId,
-        type: filters.type,
-        plot: filters.plot,
-      })
-
-      if (response.Response === 'False') {
-        error.value = response.Error
-        selectedMovie.value = null
-        return
-      }
-
-      selectedMovie.value = response
+      selectedMedia.value = await api.media.getDetails(mediaType, id)
     } catch (e) {
-      error.value = handleError(e, 'Failed to fetch movie details')
-      selectedMovie.value = null
+      error.value = handleError(e)
+      selectedMedia.value = null
     } finally {
       loading.value = false
     }
   }
 
-  function clearSelectedMovie() {
-    selectedMovie.value = null
+  function clearSelectedMedia() {
+    selectedMedia.value = null
   }
 
   watch(
-    () => ({ search: filtersStore.search, type: filtersStore.type, year: filtersStore.year }),
-    (params) => {
-      if (params.search.trim().length < 3) {
-        movies.value = []
-        totalResults.value = 0
-        currentPage.value = 1
-        error.value = null
-        return
-      }
-      searchMovies(1)
+    () => ({
+      search: filtersStore.search,
+      mediaType: filtersStore.mediaType,
+      genres: filtersStore.genres,
+      era: filtersStore.era,
+      minRating: filtersStore.minRating,
+    }),
+    () => {
+      fetchItems(1)
     },
     { immediate: true },
   )
 
   return {
-    movies,
-    totalResults,
+    items,
+    totalPages,
     currentPage,
     hasMore,
-    selectedMovie,
+    selectedMedia,
     loading,
     error,
-    searchMovies,
+    fetchItems,
     loadMore,
-    fetchMovieDetails,
-    clearSelectedMovie,
+    fetchMediaDetails,
+    clearSelectedMedia,
   }
 })

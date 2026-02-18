@@ -42,6 +42,11 @@ Vue 3 + TypeScript SPA using Vite, with **@nuxt/ui v4** as the component library
 - **Early returns over if/else** — use guard clauses (early returns) instead of if/else blocks. Flatten nested logic by returning early for invalid/edge cases.
 - **No semicolons**, single quotes, 100 char print width (Prettier config)
 - **No non-null assertions (`!`)** — never use TypeScript's `!` operator. Handle `undefined`/`null` explicitly with proper checks or fallbacks.
+- **No type assertions (`as`)** — never use `as Type` casts. Use type guards, type annotations, or `@ts-expect-error` (in tests only) instead. `as const` and `as const satisfies` are allowed.
+- **Extract template conditions into computed properties** — never use compound boolean expressions (e.g. `v-if="loading && !hasResults"`) directly in templates. Extract them into named computed properties with descriptive names (e.g. `showSkeleton`, `showEmpty`, `hasCast`).
+- **No empty `()` in template event handlers** — when a handler takes no arguments, omit the parentheses: `@click="clearAll"` not `@click="clearAll()"`. Only use `()` when passing arguments.
+- **Destructure everything** — destructure API responses (`const { results, total_pages } = ...`), props (`const { movie } = defineProps()`), v-for items (`v-for="{ id, name } in items"`), and store refs (`storeToRefs`). Avoid `x.y` chaining.
+- **Coupled components live next to their page** — components used by a single page go in a subfolder next to that page (e.g. `src/pages/movie-detail/media-hero.vue`). Shared/global components stay in `src/components/`.
 - ESLint uses `vue/flat/essential` + `@vue/eslint-config-typescript` recommended
 - Oxlint runs first (correctness category, plugins: eslint, typescript, unicorn, oxc, vue)
 - Prettier runs via `eslint-config-prettier` to disable conflicting ESLint rules

@@ -1,32 +1,50 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
 import { useMoviesStore } from '@/stores/moviesStore'
 import { useFiltersStore } from '@/stores/filtersStore'
 import MovieCard from '@/components/movie-card.vue'
 
 const moviesStore = useMoviesStore()
+const { items, loading, error, hasMore } = storeToRefs(moviesStore)
+const { loadMore } = moviesStore
+
 const filtersStore = useFiltersStore()
+const { mediaType } = storeToRefs(filtersStore)
 
 const SKELETON_COUNT = 10
 
-const hasResults = computed(() => moviesStore.movies.length > 0)
-const showEmpty = computed(
-  () => !moviesStore.loading && !moviesStore.error && !hasResults.value && filtersStore.search,
+const hasResults = computed(() => items.value.length > 0)
+const showSkeleton = computed(() => loading.value && !hasResults.value)
+const showEmpty = computed(() => !loading.value && !error.value && !hasResults.value)
+const showLoader = computed(() => hasResults.value && hasMore.value)
+
+const loaderRef = ref<HTMLElement | null>(null)
+
+useIntersectionObserver(
+  loaderRef,
+  ([entry]) => {
+    if (!entry?.isIntersecting) return
+    if (loading.value || !hasMore.value) return
+    loadMore()
+  },
+  { rootMargin: '200px' },
 )
 </script>
 
 <template>
   <div class="flex flex-col gap-6 p-6">
     <UAlert
-      v-if="moviesStore.error"
+      v-if="error"
       color="error"
       variant="subtle"
       icon="i-lucide-circle-alert"
-      :title="moviesStore.error"
+      :title="error"
     />
 
     <div
-      v-if="moviesStore.loading && !hasResults"
+      v-if="showSkeleton"
       class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
       <div v-for="n in SKELETON_COUNT" :key="n" class="flex flex-col gap-2">
@@ -40,7 +58,12 @@ const showEmpty = computed(
       v-else-if="hasResults"
       class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
-      <MovieCard v-for="movie in moviesStore.movies" :key="movie.imdbID" :movie="movie" />
+      <MovieCard
+        v-for="item in items"
+        :key="item.id"
+        :movie="item"
+        :media-type="mediaType"
+      />
     </div>
 
     <UEmpty
@@ -50,22 +73,12 @@ const showEmpty = computed(
       description="Try a different search term or adjust your filters"
     />
 
-    <UEmpty
-      v-else-if="!filtersStore.search && !moviesStore.loading"
-      icon="i-lucide-film"
-      title="Search for movies"
-      description="Enter a title above to get started"
-    />
-
-    <div v-if="moviesStore.hasMore && hasResults" class="flex justify-center">
-      <UButton
-        label="Load more"
-        variant="outline"
-        color="neutral"
-        size="lg"
-        :loading="moviesStore.loading"
-        @click="moviesStore.loadMore"
-      />
+    <div
+      v-if="showLoader"
+      ref="loaderRef"
+      class="flex justify-center py-4"
+    >
+      <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-neutral-400" />
     </div>
   </div>
 </template>

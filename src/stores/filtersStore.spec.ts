@@ -19,96 +19,54 @@ describe('filtersStore', () => {
     mockPush.mockClear()
   })
 
-  describe('search computed', () => {
-    it('defaults to empty string when absent from URL', () => {
+  describe('computed filters from URL', () => {
+    it('defaults all filters to empty/movie when absent', () => {
       const store = useFiltersStore()
       expect(store.search).toBe('')
+      expect(store.mediaType).toBe('movie')
+      expect(store.genres).toBe('')
+      expect(store.era).toBe('')
+      expect(store.minRating).toBe('')
     })
 
-    it('reads from route.query.search', () => {
-      mockQuery.value.search = 'batman'
+    it('reads all filters from route query', () => {
+      mockQuery.value = { search: 'batman', mediaType: 'tv', genres: '28,12', era: '2020s', minRating: '8' }
       const store = useFiltersStore()
       expect(store.search).toBe('batman')
+      expect(store.mediaType).toBe('tv')
+      expect(store.genres).toBe('28,12')
+      expect(store.era).toBe('2020s')
+      expect(store.minRating).toBe('8')
+    })
+
+    it('falls back to movie for invalid mediaType', () => {
+      mockQuery.value.mediaType = 'documentary'
+      const store = useFiltersStore()
+      expect(store.mediaType).toBe('movie')
     })
   })
 
-  describe('type computed', () => {
-    it('defaults to movie when absent from URL', () => {
+  describe('hasActiveFilters', () => {
+    it('returns false when all filters are default', () => {
       const store = useFiltersStore()
-      expect(store.type).toBe('movie')
+      expect(store.hasActiveFilters).toBe(false)
     })
 
-    it('reads valid type from URL', () => {
-      mockQuery.value.type = 'series'
+    it('returns true when any filter is non-default', () => {
+      mockQuery.value.era = '2020s'
       const store = useFiltersStore()
-      expect(store.type).toBe('series')
-    })
-
-    it('accepts episode type', () => {
-      mockQuery.value.type = 'episode'
-      const store = useFiltersStore()
-      expect(store.type).toBe('episode')
-    })
-
-    it('falls back to movie for invalid type', () => {
-      mockQuery.value.type = 'documentary'
-      const store = useFiltersStore()
-      expect(store.type).toBe('movie')
-    })
-  })
-
-  describe('year computed', () => {
-    it('defaults to empty string when absent from URL', () => {
-      const store = useFiltersStore()
-      expect(store.year).toBe('')
-    })
-
-    it('reads from route.query.year', () => {
-      mockQuery.value.year = '2020'
-      const store = useFiltersStore()
-      expect(store.year).toBe('2020')
-    })
-  })
-
-  describe('plot computed', () => {
-    it('defaults to short when absent from URL', () => {
-      const store = useFiltersStore()
-      expect(store.plot).toBe('short')
-    })
-
-    it('reads full from URL', () => {
-      mockQuery.value.plot = 'full'
-      const store = useFiltersStore()
-      expect(store.plot).toBe('full')
-    })
-
-    it('falls back to short for invalid value', () => {
-      mockQuery.value.plot = 'extended'
-      const store = useFiltersStore()
-      expect(store.plot).toBe('short')
-    })
-  })
-
-  describe('filters computed', () => {
-    it('aggregates type, year, and plot', () => {
-      mockQuery.value.type = 'series'
-      mockQuery.value.year = '2020'
-      mockQuery.value.plot = 'full'
-      const store = useFiltersStore()
-      expect(store.filters).toEqual({ type: 'series', year: '2020', plot: 'full' })
-    })
-
-    it('uses defaults when URL has no filter params', () => {
-      const store = useFiltersStore()
-      expect(store.filters).toEqual({ type: 'movie', year: '', plot: 'short' })
+      expect(store.hasActiveFilters).toBe(true)
     })
   })
 
   describe('setSearch', () => {
-    it('pushes search param to router', () => {
+    it('pushes search param and preserves existing params', () => {
+      mockQuery.value.mediaType = 'tv'
       const store = useFiltersStore()
       store.setSearch('batman')
-      expect(mockPush).toHaveBeenCalledWith({ query: { search: 'batman' } })
+      expect(mockPush).toHaveBeenCalledWith({
+        query: { mediaType: 'tv', search: 'batman' },
+      })
     })
 
     it('removes search param when value is empty', () => {
@@ -117,63 +75,64 @@ describe('filtersStore', () => {
       store.setSearch('')
       expect(mockPush).toHaveBeenCalledWith({ query: {} })
     })
-
-    it('preserves existing query params', () => {
-      mockQuery.value.type = 'series'
-      mockQuery.value.year = '2020'
-      const store = useFiltersStore()
-      store.setSearch('batman')
-      expect(mockPush).toHaveBeenCalledWith({
-        query: { type: 'series', year: '2020', search: 'batman' },
-      })
-    })
   })
 
-  describe('setType', () => {
-    it('pushes type param for non-default value', () => {
+  describe('setMediaType', () => {
+    it('clears genres when changing and omits movie as default', () => {
+      mockQuery.value = { mediaType: 'tv', genres: '28,12' }
       const store = useFiltersStore()
-      store.setType('series')
-      expect(mockPush).toHaveBeenCalledWith({ query: { type: 'series' } })
-    })
-
-    it('omits type param when value is movie (default)', () => {
-      mockQuery.value.type = 'series'
-      const store = useFiltersStore()
-      store.setType('movie')
+      store.setMediaType('movie')
       expect(mockPush).toHaveBeenCalledWith({ query: {} })
     })
 
-    it('ignores invalid type values', () => {
+    it('pushes tv mediaType', () => {
       const store = useFiltersStore()
-      store.setType('documentary')
-      expect(mockPush).not.toHaveBeenCalled()
+      store.setMediaType('tv')
+      expect(mockPush).toHaveBeenCalledWith({ query: { mediaType: 'tv' } })
     })
 
-    it('ignores null', () => {
+    it('ignores invalid mediaType values', () => {
       const store = useFiltersStore()
-      store.setType(null)
+      // @ts-expect-error testing invalid mediaType input
+      store.setMediaType('documentary')
       expect(mockPush).not.toHaveBeenCalled()
     })
   })
 
-  describe('setYear', () => {
-    it('pushes year param to router', () => {
+  describe('toggleGenre', () => {
+    it('adds a genre when not selected', () => {
       const store = useFiltersStore()
-      store.setYear('2020')
-      expect(mockPush).toHaveBeenCalledWith({ query: { year: '2020' } })
+      store.toggleGenre(28)
+      expect(mockPush).toHaveBeenCalledWith({ query: { genres: '28' } })
     })
 
-    it('removes year param when value is empty', () => {
-      mockQuery.value.year = '2020'
+    it('removes a genre when already selected', () => {
+      mockQuery.value.genres = '28,12'
       const store = useFiltersStore()
-      store.setYear('')
-      expect(mockPush).toHaveBeenCalledWith({ query: {} })
+      store.toggleGenre(28)
+      expect(mockPush).toHaveBeenCalledWith({ query: { genres: '12' } })
+    })
+  })
+
+  describe('setEra / setMinRating', () => {
+    it('pushes era param', () => {
+      const store = useFiltersStore()
+      store.setEra('2020s')
+      expect(mockPush).toHaveBeenCalledWith({ query: { era: '2020s' } })
     })
 
-    it('removes year param when value is null', () => {
-      mockQuery.value.year = '2020'
+    it('pushes minRating param', () => {
       const store = useFiltersStore()
-      store.setYear(null)
+      store.setMinRating('8')
+      expect(mockPush).toHaveBeenCalledWith({ query: { minRating: '8' } })
+    })
+  })
+
+  describe('clearAll', () => {
+    it('resets all query params', () => {
+      mockQuery.value = { mediaType: 'tv', genres: '28', era: '2020s', minRating: '8', search: 'test' }
+      const store = useFiltersStore()
+      store.clearAll()
       expect(mockPush).toHaveBeenCalledWith({ query: {} })
     })
   })

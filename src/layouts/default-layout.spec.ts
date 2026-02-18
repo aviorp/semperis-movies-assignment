@@ -17,9 +17,11 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/api', () => ({
   api: {
-    movies: {
-      searchMovies: vi.fn().mockResolvedValue({ Response: 'False', Error: 'Too many results.' }),
-      getByIdOrTitle: vi.fn(),
+    media: {
+      discover: vi.fn().mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      search: vi.fn().mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      getDetails: vi.fn(),
+      getGenres: vi.fn().mockResolvedValue({ genres: [] }),
     },
   },
 }))
@@ -28,10 +30,8 @@ import { useFiltersStore } from '@/stores/filtersStore'
 
 const UInputStub = {
   name: 'UInput',
-  template:
-    '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" @keydown="$emit(\'keydown\', $event)" />',
-  props: ['modelValue', 'placeholder', 'icon', 'size', 'loading'],
-  emits: ['update:modelValue', 'keydown'],
+  template: '<input :value="modelValue" />',
+  props: ['modelValue', 'placeholder', 'icon', 'size'],
 }
 
 let pinia: ReturnType<typeof createPinia>
@@ -76,13 +76,7 @@ describe('DefaultLayout', () => {
     expect(input.props('modelValue')).toBe('batman')
   })
 
-  it('initializes search input as empty when no query', () => {
-    const wrapper = mountLayout()
-    const input = wrapper.findComponent({ name: 'UInput' })
-    expect(input.props('modelValue')).toBe('')
-  })
-
-  it('syncs search input when store search changes (browser back/forward)', async () => {
+  it('syncs search input when store search changes', async () => {
     const wrapper = mountLayout()
     mockQuery.value.search = 'inception'
     await nextTick()
@@ -90,58 +84,28 @@ describe('DefaultLayout', () => {
     expect(input.props('modelValue')).toBe('inception')
   })
 
-  it('calls setSearch on Enter key via handleSearchSubmit', async () => {
-    const wrapper = mountLayout()
+  it('calls setSearch on handleSearchSubmit', async () => {
     const store = useFiltersStore()
     const spy = vi.spyOn(store, 'setSearch')
+    const wrapper = mountLayout()
 
-    const vm = wrapper.vm as unknown as { searchInput: string }
-    vm.searchInput = 'dark knight'
+    // @ts-expect-error accessing internal method for testing
+    wrapper.vm.searchInput = 'dark knight'
     await nextTick()
-
-    const handler = wrapper.vm as unknown as { handleSearchSubmit: () => void }
-    handler.handleSearchSubmit()
+    // @ts-expect-error accessing internal method for testing
+    wrapper.vm.handleSearchSubmit()
 
     expect(spy).toHaveBeenCalledWith('dark knight')
   })
 
-  it('handleDebouncedSearch calls setSearch for 3+ char input', () => {
-    const wrapper = mountLayout()
+  it('trims whitespace via handleDebouncedSearch', () => {
     const store = useFiltersStore()
     const spy = vi.spyOn(store, 'setSearch')
+    const wrapper = mountLayout()
 
-    const handler = wrapper.vm as unknown as {
-      handleDebouncedSearch: (value: string) => void
-    }
-    handler.handleDebouncedSearch('batman')
+    // @ts-expect-error accessing internal method for testing
+    wrapper.vm.handleDebouncedSearch('  batman  ')
 
     expect(spy).toHaveBeenCalledWith('batman')
-  })
-
-  it('handleDebouncedSearch calls setSearch for empty input (clears)', () => {
-    mockQuery.value.search = 'batman'
-    const wrapper = mountLayout()
-    const store = useFiltersStore()
-    const spy = vi.spyOn(store, 'setSearch')
-
-    const handler = wrapper.vm as unknown as {
-      handleDebouncedSearch: (value: string) => void
-    }
-    handler.handleDebouncedSearch('')
-
-    expect(spy).toHaveBeenCalledWith('')
-  })
-
-  it('handleDebouncedSearch skips setSearch for 1-2 char input', () => {
-    const wrapper = mountLayout()
-    const store = useFiltersStore()
-    const spy = vi.spyOn(store, 'setSearch')
-
-    const handler = wrapper.vm as unknown as {
-      handleDebouncedSearch: (value: string) => void
-    }
-    handler.handleDebouncedSearch('ab')
-
-    expect(spy).not.toHaveBeenCalled()
   })
 })

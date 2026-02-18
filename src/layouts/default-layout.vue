@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useFiltersStore } from '@/stores/filtersStore'
 
 const route = useRoute()
+
 const filtersStore = useFiltersStore()
+const { search } = storeToRefs(filtersStore)
+const { setSearch } = filtersStore
 
 const title = computed(() => {
   if (typeof route.meta?.title === 'string') {
@@ -13,43 +17,35 @@ const title = computed(() => {
   return 'Movies App'
 })
 
-const searchInput = ref(filtersStore.search)
+const searchInput = ref(search.value)
 
-watch(
-  () => filtersStore.search,
-  (value) => {
-    searchInput.value = value
-  },
-)
+watch(search, (value) => {
+  searchInput.value = value
+})
 
 function handleDebouncedSearch(value: string) {
   searchInput.value = value
-  const trimmed = value.trim()
-  if (trimmed.length > 0 && trimmed.length < 3) return
-  filtersStore.setSearch(trimmed)
+  setSearch(value.trim())
 }
 
 function handleSearchSubmit() {
-  filtersStore.setSearch(searchInput.value.trim())
+  setSearch(searchInput.value.trim())
 }
 </script>
 
 <template>
   <UDashboardGroup>
-    <UDashboardSidebar collapsible resizable>
+    <UDashboardSidebar resizable>
       <MovieFilters />
     </UDashboardSidebar>
     <UDashboardPanel>
       <template #header>
         <UDashboardNavbar :title>
-          <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
           <template #default>
             <UInput
               v-debounce:400ms="handleDebouncedSearch"
               :model-value="searchInput"
-              placeholder="Search movies, series, episodes..."
+              placeholder="Search movies & TV shows..."
               icon="i-lucide-search"
               size="xl"
               class="w-100"
@@ -63,7 +59,11 @@ function handleSearchSubmit() {
         </UDashboardNavbar>
       </template>
       <template #body>
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
       </template>
     </UDashboardPanel>
   </UDashboardGroup>
