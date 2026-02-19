@@ -46,7 +46,7 @@ function getMediaLabel(mediaType: MediaType): string {
     </div>
 
     <div class="flex flex-1 flex-col gap-1 p-3">
-      <h3 class="line-clamp-1 text-sm font-semibold" :title="getMediaTitle(movie)">
+      <h3 class="line-clamp-1 text-sm font-semibold">
         {{ getMediaTitle(movie) }}
       </h3>
       <div class="mt-auto flex items-center justify-between gap-2">
