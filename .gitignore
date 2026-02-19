@@ -45,3 +45,7 @@ components.d.ts
 
 
 .env
+
+
+CLAUDE.md
+.claude/

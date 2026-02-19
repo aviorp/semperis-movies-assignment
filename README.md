@@ -1,4 +1,4 @@
-# Semperis Movies
+# Semperis Movies Home Assignment
 
 A movie and TV show catalog built with Vue 3, powered by the [TMDB API](https://www.themoviedb.org/documentation/api).
 
@@ -30,10 +30,10 @@ Browse trending content, filter by genre, era, and rating, search by title, and 
 
 ```sh
 pnpm install
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Add your TMDB API key to `.env.local`:
+Add your TMDB API key to `.env`:
 
 ```
 VITE_TMDB_API_KEY=your_key_here
@@ -43,13 +43,13 @@ Get a free key at [themoviedb.org/settings/api](https://www.themoviedb.org/setti
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start dev server |
-| `pnpm build` | Type-check and build for production |
-| `pnpm test` | Run all tests once |
-| `pnpm lint` | Run oxlint + eslint with auto-fix |
-| `pnpm format` | Format source files with Prettier |
+| Command       | Description                         |
+| ------------- | ----------------------------------- |
+| `pnpm dev`    | Start dev server                    |
+| `pnpm build`  | Type-check and build for production |
+| `pnpm test`   | Run all tests once                  |
+| `pnpm lint`   | Run oxlint + eslint with auto-fix   |
+| `pnpm format` | Format source files with Prettier   |
 
 ## Project Structure
 
@@ -68,3 +68,7 @@ src/
   utils/          # Helper functions and constants
   router/         # Route definitions
 ```
+
+## Live Demo
+
+Hosted on Cloudflare Pages: [semperis.aviorp.me](https://semperis.aviorp.me/)
