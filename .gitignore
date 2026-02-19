@@ -45,7 +45,7 @@ components.d.ts
 
 
 .env
-
+.vscode
 
 CLAUDE.md
 .claude/
