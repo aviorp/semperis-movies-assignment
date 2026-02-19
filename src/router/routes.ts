@@ -27,4 +27,9 @@ export default [
       },
     ],
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    redirect: '/',
+  },
 ] as const satisfies readonly RouteRecordRaw[]
