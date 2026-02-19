@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMoviesStore } from '@/stores/moviesStore'
-import { isMediaType, isString } from '@/utils'
+import { isMediaType } from '@/utils'
 import MediaHero from './components/media-hero.vue'
 import MediaCast from './components/media-cast.vue'
 
@@ -22,7 +22,8 @@ watch(
   () => [route.params.mediaType, route.params.id],
   ([mediaType, id]) => {
     clearSelectedMedia()
-    if (isMediaType(mediaType) && isString(id)) {
+
+    if (isMediaType(mediaType)) {
       fetchMediaDetails(mediaType, Number(id))
     }
   },
