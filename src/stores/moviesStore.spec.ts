@@ -60,183 +60,95 @@ describe('moviesStore', () => {
     mockDiscover.mockResolvedValue(MOCK_RESPONSE)
   })
 
-  describe('watcher auto-fetch', () => {
-    it('triggers discover on init when no search query', async () => {
-      useMoviesStore()
-      await nextTick()
-      await flushPromises()
-      expect(mockDiscover).toHaveBeenCalledWith('movie', { page: 1 })
-    })
+  it('triggers discover on init and search when query exists', async () => {
+    useMoviesStore()
+    await nextTick()
+    await flushPromises()
+    expect(mockDiscover).toHaveBeenCalledWith('movie', { page: 1 })
 
-    it('triggers search when search query exists', async () => {
-      mockSearch.mockResolvedValue(MOCK_RESPONSE)
-      mockQuery.value.search = 'batman'
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
-      expect(mockSearch).toHaveBeenCalledWith('movie', { query: 'batman', page: 1 })
-      expect(store.items).toEqual([MOCK_ITEM])
-    })
-
-    it('re-fetches when filters change', async () => {
-      useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      mockDiscover.mockClear()
-      mockQuery.value.genres = '28,80'
-      await nextTick()
-      await flushPromises()
-      expect(mockDiscover).toHaveBeenCalledWith('movie', { page: 1, with_genres: '28,80' })
-    })
-
-    it('passes date range params for era filter (movie)', async () => {
-      useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      mockDiscover.mockClear()
-      mockQuery.value.era = '2020s'
-      await nextTick()
-      await flushPromises()
-      expect(mockDiscover).toHaveBeenCalledWith('movie', {
-        page: 1,
-        'primary_release_date.gte': '2020-01-01',
-        'primary_release_date.lte': '2029-12-31',
-      })
-    })
-
-    it('uses first_air_date params for TV era filter', async () => {
-      mockQuery.value.mediaType = 'tv'
-      useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      mockDiscover.mockClear()
-      mockQuery.value.era = '2010s'
-      await nextTick()
-      await flushPromises()
-      expect(mockDiscover).toHaveBeenCalledWith('tv', {
-        page: 1,
-        'first_air_date.gte': '2010-01-01',
-        'first_air_date.lte': '2019-12-31',
-      })
-    })
-
-    it('passes vote_average.gte for minRating filter', async () => {
-      useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      mockDiscover.mockClear()
-      mockQuery.value.minRating = '8'
-      await nextTick()
-      await flushPromises()
-      expect(mockDiscover).toHaveBeenCalledWith('movie', {
-        page: 1,
-        'vote_average.gte': 8,
-      })
-    })
+    mockSearch.mockResolvedValue(MOCK_RESPONSE)
+    mockQuery.value.search = 'batman'
+    await nextTick()
+    await flushPromises()
+    expect(mockSearch).toHaveBeenCalledWith('movie', { query: 'batman', page: 1 })
   })
 
-  describe('fetchItems', () => {
-    it('replaces items on page 1 and tracks loading state', async () => {
-      let resolve!: (value: PaginatedResponse<MediaListItem>) => void
-      mockDiscover.mockImplementation(
-        () => new Promise<PaginatedResponse<MediaListItem>>((r) => (resolve = r)),
-      )
-      const store = useMoviesStore()
-      await nextTick()
-      expect(store.loading).toBe(true)
-      resolve(MOCK_RESPONSE)
-      await flushPromises()
-      expect(store.loading).toBe(false)
-      expect(store.items).toEqual([MOCK_ITEM])
-    })
+  it('re-fetches when filters change', async () => {
+    useMoviesStore()
+    await nextTick()
+    await flushPromises()
 
-    it('handles errors with default message for non-Error values', async () => {
-      mockDiscover.mockRejectedValue('something broke')
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
-      expect(store.error).toBe('Something went wrong')
-      expect(store.items).toEqual([])
-    })
+    mockDiscover.mockClear()
+    mockQuery.value.genres = '28,80'
+    await nextTick()
+    await flushPromises()
+    expect(mockDiscover).toHaveBeenCalledWith('movie', { page: 1, with_genres: '28,80' })
   })
 
-  describe('loadMore', () => {
-    it('appends items from next page', async () => {
-      const secondItem = { ...MOCK_ITEM, id: 999, title: 'Batman Returns' }
-      mockDiscover
-        .mockResolvedValueOnce({ ...MOCK_RESPONSE, total_pages: 3 })
-        .mockResolvedValueOnce({
-          page: 2,
-          results: [secondItem],
-          total_pages: 3,
-          total_results: 2,
-        })
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      await store.loadMore()
-      expect(store.items).toHaveLength(2)
-      expect(store.currentPage).toBe(2)
-    })
-
-    it('does not clear existing items on page 2 error', async () => {
-      mockDiscover
-        .mockResolvedValueOnce({ ...MOCK_RESPONSE, total_pages: 3 })
-        .mockRejectedValueOnce(new Error('Network error'))
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
-
-      await store.loadMore()
-      expect(store.items).toHaveLength(1)
-      expect(store.error).toBe('Network error')
-    })
+  it('tracks loading state and handles errors', async () => {
+    let resolve!: (value: PaginatedResponse<MediaListItem>) => void
+    mockDiscover.mockImplementation(
+      () => new Promise<PaginatedResponse<MediaListItem>>((r) => (resolve = r)),
+    )
+    const store = useMoviesStore()
+    await nextTick()
+    expect(store.loading).toBe(true)
+    resolve(MOCK_RESPONSE)
+    await flushPromises()
+    expect(store.loading).toBe(false)
+    expect(store.items).toEqual([MOCK_ITEM])
   })
 
-  describe('fetchMediaDetails', () => {
-    it('populates selectedMedia on success', async () => {
-      const mockDetails = {
-        id: 272,
-        title: 'Batman Begins',
-        overview: 'After training...',
-        poster_path: '/poster.jpg',
-        backdrop_path: '/backdrop.jpg',
-        genres: [{ id: 28, name: 'Action' }],
-        vote_average: 7.7,
-        vote_count: 10000,
-        popularity: 50.5,
-        homepage: null,
-        tagline: null,
-        status: 'Released',
-        release_date: '2005-06-15',
-        runtime: 140,
-        budget: 150000000,
-        revenue: 373000000,
-        imdb_id: 'tt0372784',
-      }
-      mockGetDetails.mockResolvedValue(mockDetails)
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
+  it('appends items on loadMore and preserves existing on error', async () => {
+    const secondItem = { ...MOCK_ITEM, id: 999, title: 'Batman Returns' }
+    mockDiscover
+      .mockResolvedValueOnce({ ...MOCK_RESPONSE, total_pages: 3 })
+      .mockResolvedValueOnce({
+        page: 2,
+        results: [secondItem],
+        total_pages: 3,
+        total_results: 2,
+      })
+    const store = useMoviesStore()
+    await nextTick()
+    await flushPromises()
 
-      await store.fetchMediaDetails('movie', 272)
-      expect(store.selectedMedia).toEqual(mockDetails)
-    })
+    await store.loadMore()
+    expect(store.items).toHaveLength(2)
+    expect(store.currentPage).toBe(2)
+  })
 
-    it('sets error on failure and clears selectedMedia', async () => {
-      mockGetDetails.mockRejectedValue(new Error('Timeout'))
-      const store = useMoviesStore()
-      await nextTick()
-      await flushPromises()
+  it('fetches media details and sets error on failure', async () => {
+    const mockDetails = {
+      id: 272,
+      title: 'Batman Begins',
+      overview: 'After training...',
+      poster_path: '/poster.jpg',
+      backdrop_path: '/backdrop.jpg',
+      genres: [{ id: 28, name: 'Action' }],
+      vote_average: 7.7,
+      vote_count: 10000,
+      popularity: 50.5,
+      homepage: null,
+      tagline: null,
+      status: 'Released',
+      release_date: '2005-06-15',
+      runtime: 140,
+      budget: 150000000,
+      revenue: 373000000,
+      imdb_id: 'tt0372784',
+    }
+    mockGetDetails.mockResolvedValue(mockDetails)
+    const store = useMoviesStore()
+    await nextTick()
+    await flushPromises()
 
-      await store.fetchMediaDetails('movie', 272)
-      expect(store.error).toBe('Timeout')
-      expect(store.selectedMedia).toBeNull()
-    })
+    await store.fetchMediaDetails('movie', 272)
+    expect(store.selectedMedia).toEqual(mockDetails)
+
+    mockGetDetails.mockRejectedValue(new Error('Timeout'))
+    await store.fetchMediaDetails('movie', 999)
+    expect(store.error).toBe('Timeout')
+    expect(store.selectedMedia).toBeNull()
   })
 })

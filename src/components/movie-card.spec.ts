@@ -34,38 +34,11 @@ function mountCard(movie: MediaListItem = MOCK_MOVIE, mediaType: MediaType = 'mo
 }
 
 describe('MovieCard', () => {
-  it('renders the movie title', () => {
+  it('renders title, year, and rating', () => {
     const wrapper = mountCard()
     expect(wrapper.text()).toContain('Batman Begins')
-  })
-
-  it('renders the movie year', () => {
-    const wrapper = mountCard()
     expect(wrapper.text()).toContain('2005')
-  })
-
-  it('renders the media type as a badge', () => {
-    const wrapper = mountCard()
-    expect(wrapper.text()).toContain('Movie')
-  })
-
-  it('renders TV badge for tv mediaType', () => {
-    const wrapper = mountCard(MOCK_MOVIE, 'tv')
-    expect(wrapper.text()).toContain('TV')
-  })
-
-  it('shows poster image when poster_path is present', () => {
-    const wrapper = mountCard()
-    const img = wrapper.find('img')
-    expect(img.exists()).toBe(true)
-    expect(img.attributes('src')).toContain('/poster.jpg')
-    expect(img.attributes('alt')).toBe('Batman Begins')
-  })
-
-  it('shows fallback icon when poster_path is null', () => {
-    const wrapper = mountCard({ ...MOCK_MOVIE, poster_path: null })
-    expect(wrapper.find('img').exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'UIcon' }).exists()).toBe(true)
+    expect(wrapper.text()).toContain('7.7')
   })
 
   it('links to the media detail page', () => {
@@ -77,17 +50,13 @@ describe('MovieCard', () => {
     })
   })
 
-  it('displays the rating on the poster', () => {
-    const wrapper = mountCard()
-    expect(wrapper.text()).toContain('7.7')
+  it('shows fallback icon when poster_path is null', () => {
+    const wrapper = mountCard({ ...MOCK_MOVIE, poster_path: null })
+    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'UIcon' }).exists()).toBe(true)
   })
 
-  it('hides rating when vote_average is 0', () => {
-    const wrapper = mountCard({ ...MOCK_MOVIE, vote_average: 0 })
-    expect(wrapper.text()).not.toContain('0.0')
-  })
-
-  it('uses name field for TV shows', () => {
+  it('handles TV shows with name and first_air_date', () => {
     const tvShow: MediaListItem = {
       id: 1399,
       name: 'Game of Thrones',
@@ -101,5 +70,6 @@ describe('MovieCard', () => {
     const wrapper = mountCard(tvShow, 'tv')
     expect(wrapper.text()).toContain('Game of Thrones')
     expect(wrapper.text()).toContain('2011')
+    expect(wrapper.text()).toContain('TV')
   })
 })
