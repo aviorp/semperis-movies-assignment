@@ -14,8 +14,7 @@ export const useFiltersStore = defineStore('filters', () => {
 
   const mediaType = computed<MediaType>(() => {
     const val = extractQueryValue(routeQuery.value.mediaType)
-    if (val === 'tv') return 'tv'
-    return 'movie'
+    return val === 'tv' ? 'tv' : 'movie'
   })
 
   const genres = computed(() => extractQueryValue(routeQuery.value.genres) ?? '')
@@ -52,7 +51,7 @@ export const useFiltersStore = defineStore('filters', () => {
   function setMediaType(value: MediaType) {
     if (value !== 'movie' && value !== 'tv') return
     updateQuery({
-      mediaType: value === 'movie' ? undefined : value,
+      mediaType: value,
       genres: undefined,
     })
   }
@@ -73,11 +72,11 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   function setEra(value: string) {
-    updateQuery({ era: value || undefined })
+    updateQuery({ era: value })
   }
 
   function setMinRating(value: string) {
-    updateQuery({ minRating: value || undefined })
+    updateQuery({ minRating: value })
   }
 
   function clearAll() {

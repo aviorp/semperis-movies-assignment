@@ -10,6 +10,10 @@ const CACHE_KEYS: Record<MediaType, object> = {
   tv: {},
 }
 
+/**
+ * We use a WeakMap with dummy object keys to cache genres by media type. This allows us to avoid refetching genres when switching between movies and TV shows, while still allowing garbage collection if the store is ever destroyed.
+ * for production uses, i would likely implement a client-side caching layer, such as tanstack-query, to handle caching and background updates more robustly.
+ */
 const cache = new WeakMap<object, Genre[]>()
 
 export const useGenresStore = defineStore('genres', () => {
@@ -23,8 +27,7 @@ export const useGenresStore = defineStore('genres', () => {
     const key = CACHE_KEYS[mediaType]
     const cached = cache.get(key)
     if (cached) {
-      genres.value = cached
-      return
+      return (genres.value = cached)
     }
 
     loading.value = true

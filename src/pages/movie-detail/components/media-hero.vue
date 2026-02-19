@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { MovieDetails, TvDetails } from '@/types'
 import { isMovieDetails, getMediaTitle, getMediaYear, getPosterUrl, getBackdropUrl } from '@/utils'
-import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const { media } = defineProps<{
@@ -10,26 +9,23 @@ const { media } = defineProps<{
 
 const router = useRouter()
 
-const title = computed(() => getMediaTitle(media))
-const year = computed(() => getMediaYear(media))
-const posterUrl = computed(() => getPosterUrl(media.poster_path, 'large'))
-const backdropUrl = computed(() => getBackdropUrl(media.backdrop_path, 'large'))
-const genres = computed(() => media.genres)
-const voteAverage = computed(() => media.vote_average)
-const voteCount = computed(() => media.vote_count)
-const overview = computed(() => media.overview)
-const starRating = computed(() => voteAverage.value / 2)
+const title = getMediaTitle(media)
+const year = getMediaYear(media)
+const posterUrl = getPosterUrl(media.poster_path, 'large')
+const backdropUrl = getBackdropUrl(media.backdrop_path, 'large')
+const { genres, vote_average: voteAverage, vote_count: voteCount, overview } = media
+const starRating = voteAverage / 2
 
-const hasRating = computed(() => voteAverage.value > 0)
-const hasVotes = computed(() => voteCount.value > 0)
+const hasRating = voteAverage > 0
+const hasVotes = voteCount > 0
 
-const crew = computed(() => media.credits?.crew ?? [])
-const directors = computed(() => crew.value.filter((c) => c.job === 'Director'))
-const writers = computed(() => crew.value.filter((c) => c.department === 'Writing'))
-const hasDirectors = computed(() => directors.value.length > 0)
-const hasWriters = computed(() => writers.value.length > 0)
+const crew = media.credits?.crew ?? []
+const directors = crew.filter((c) => c.job === 'Director')
+const writers = crew.filter((c) => c.department === 'Writing')
+const hasDirectors = directors.length > 0
+const hasWriters = writers.length > 0
 
-const runtime = computed(() => {
+const runtime = (() => {
   if (isMovieDetails(media)) {
     if (!media.runtime) return ''
     const h = Math.floor(media.runtime / 60)
@@ -39,12 +35,12 @@ const runtime = computed(() => {
   const ep = media.episode_run_time
   if (!ep || ep.length === 0) return ''
   return `${ep[0]}m per episode`
-})
+})()
 
-const seasonInfo = computed(() => {
+const seasonInfo = (() => {
   if (isMovieDetails(media)) return ''
   return `${media.number_of_seasons} season${media.number_of_seasons !== 1 ? 's' : ''}`
-})
+})()
 </script>
 
 <template>

@@ -9,9 +9,9 @@ const { movie, mediaType } = defineProps<{
 }>()
 
 const imgFailed = ref(false)
-const hasRating = computed(() => movie.vote_average > 0)
+const hasRating = movie.vote_average > 0
 const showPoster = computed(() => getPosterUrl(movie.poster_path) !== '' && !imgFailed.value)
-const rating = computed(() => movie.vote_average.toFixed(1))
+const rating = movie.vote_average.toFixed(1)
 
 function getMediaLabel(mediaType: MediaType): string {
   return mediaType === 'tv' ? 'TV' : 'Movie'

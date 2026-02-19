@@ -1,56 +1,70 @@
-# semperis-movies-assignment
+# Semperis Movies
 
-This template should help get you started developing with Vue 3 in Vite.
+A movie and TV show catalog built with Vue 3, powered by the [TMDB API](https://www.themoviedb.org/documentation/api).
 
-## Recommended IDE Setup
+Browse trending content, filter by genre, era, and rating, search by title, and view detailed information including cast and crew.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Tech Stack
 
-## Recommended Browser Setup
+- **Vue 3** with Composition API and `<script setup>`
+- **TypeScript** for type safety
+- **Pinia** for state management
+- **Vue Router** with lazy-loaded routes
+- **@nuxt/ui v4** component library (used as a Vue plugin)
+- **Tailwind CSS v4** for styling
+- **Axios** for HTTP requests
+- **Vitest** + Vue Test Utils for testing
+- **Vite** for build tooling
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## Features
 
-## Type Support for `.vue` Imports in TS
+- Media type toggle (Movies / TV Shows)
+- Genre, era, and minimum rating filters
+- Text search with debounce
+- Infinite scroll pagination
+- Detail pages with backdrop, poster, cast, and crew
+- View Transitions API for smooth page navigation
+- URL-driven filter state (shareable links, browser history support)
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Setup
 
 ```sh
 pnpm install
+cp .env.example .env.local
 ```
 
-### Compile and Hot-Reload for Development
+Add your TMDB API key to `.env.local`:
 
-```sh
-pnpm dev
+```
+VITE_TMDB_API_KEY=your_key_here
 ```
 
-### Type-Check, Compile and Minify for Production
+Get a free key at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api).
 
-```sh
-pnpm build
+## Scripts
+
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start dev server |
+| `pnpm build` | Type-check and build for production |
+| `pnpm test` | Run all tests once |
+| `pnpm lint` | Run oxlint + eslint with auto-fix |
+| `pnpm format` | Format source files with Prettier |
+
+## Project Structure
+
 ```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-pnpm test:unit
+src/
+  api/            # Axios client and TMDB repository
+  components/     # Shared components (MovieCard, MovieFilters)
+  layouts/        # Layout shells (default with navbar, blank for detail)
+  pages/          # Route-level pages
+    home-page.vue
+    movie-detail/
+      movie-detail-page.vue
+      components/   # Page-scoped components (MediaHero, MediaCast)
+  stores/         # Pinia stores (movies, filters, genres)
+  types/          # TypeScript interfaces and type definitions
+  utils/          # Helper functions and constants
+  router/         # Route definitions
 ```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
-# semperis-movies-assignment
-# semperis-movies-assignment
