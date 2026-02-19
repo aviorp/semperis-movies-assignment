@@ -2,6 +2,7 @@
 import type { SelectOption, SelectValue } from '@/types'
 import { useFiltersStore } from '@/stores/filtersStore'
 import { useGenresStore } from '@/stores/genresStore'
+import { isString } from '@/utils'
 import { MEDIA_TYPES, ERA_OPTIONS, RATING_OPTIONS } from '@/utils/constants'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
@@ -39,7 +40,7 @@ const selectedGenres = computed(() => {
 })
 
 function handleGenresChange(values: SelectValue) {
-  const ids = values.map((v) => Number(typeof v === 'string' ? v : v.value))
+  const ids = values.map((v) => Number(isString(v) ? v : v.value))
   setGenres(ids)
 }
 

@@ -12,6 +12,10 @@ export function handleError(e: unknown, fallback = 'Something went wrong'): stri
   return fallback
 }
 
+export function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}
+
 export function isMediaType(value: unknown): value is MediaType {
   return value === 'movie' || value === 'tv'
 }

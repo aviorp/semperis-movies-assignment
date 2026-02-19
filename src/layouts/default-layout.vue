@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useFiltersStore } from '@/stores/filtersStore'
+import { isString } from '@/utils'
 
 const route = useRoute()
 
@@ -11,7 +12,7 @@ const { search } = storeToRefs(filtersStore)
 const { setSearch } = filtersStore
 
 const title = computed(() => {
-  if (typeof route.meta?.title === 'string') {
+  if (isString(route.meta?.title)) {
     return route.meta.title
   }
   return 'Movies App'
