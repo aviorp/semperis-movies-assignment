@@ -6,13 +6,15 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useFiltersStore } from './filtersStore'
 
-function buildDiscoverParams(opts: {
+interface DiscoverFilterOptions {
   page: number
   genres: string
   era: string
   minRating: string
   mediaType: MediaType
-}): DiscoverParams {
+}
+
+function buildDiscoverParams(opts: DiscoverFilterOptions): DiscoverParams {
   const params: DiscoverParams = { page: opts.page }
 
   if (opts.genres) {
@@ -57,7 +59,10 @@ export const useMoviesStore = defineStore('movies', () => {
       const { search, mediaType, genres, era, minRating } = filtersStore
       const { results, total_pages } = search
         ? await api.media.search(mediaType, { query: search, page })
-        : await api.media.discover(mediaType, buildDiscoverParams({ page, genres, era, minRating, mediaType }))
+        : await api.media.discover(
+            mediaType,
+            buildDiscoverParams({ page, genres, era, minRating, mediaType }),
+          )
 
       if (page === 1) {
         items.value = results

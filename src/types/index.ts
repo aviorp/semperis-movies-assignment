@@ -17,6 +17,24 @@ export interface BaseMedia {
   vote_average: number
 }
 
+export type MediaWithTitle = BaseMedia & { title?: string; name?: string }
+
+export type MediaWithDate = BaseMedia & { release_date?: string; first_air_date?: string }
+
+export interface DateRange {
+  gte: string
+  lte: string
+}
+
+export interface SelectOption {
+  label: string
+  value: string
+}
+
+export type SelectValue = string[] | SelectOption[]
+
+export type QueryParams = Record<string, string | undefined>
+
 export interface MediaListItem extends BaseMedia {
   title?: string
   name?: string

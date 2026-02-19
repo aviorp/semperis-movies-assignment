@@ -1,31 +1,25 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
-/* Layout transition (between dashboard ↔ blank layout) */
-.layout-enter-active,
-.layout-leave-active {
-  transition: opacity 0.25s ease;
+/* Page transitions (View Transitions API) */
+::view-transition-old(root) {
+  animation: fade-out 0.2s ease-in-out;
 }
 
-.layout-enter-from,
-.layout-leave-to {
-  opacity: 0;
+::view-transition-new(root) {
+  animation: fade-in 0.2s ease-in-out;
 }
 
-/* Page transition (within a layout) */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
 }
 
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .scrollbar-thin {

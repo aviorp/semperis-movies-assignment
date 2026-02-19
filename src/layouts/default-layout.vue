@@ -59,11 +59,7 @@ function handleSearchSubmit() {
         </UDashboardNavbar>
       </template>
       <template #body>
-        <RouterView v-slot="{ Component }">
-          <Transition name="page" mode="out-in">
-            <component :is="Component" />
-          </Transition>
-        </RouterView>
+        <RouterView />
       </template>
     </UDashboardPanel>
   </UDashboardGroup>

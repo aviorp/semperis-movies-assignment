@@ -11,7 +11,9 @@ export const ERA_OPTIONS = [
   { label: '90s - 50s', value: 'classic' },
 ] as const
 
-export const ERA_DATE_RANGES: Record<string, { gte: string; lte: string }> = {
+import type { DateRange } from '@/types'
+
+export const ERA_DATE_RANGES: Record<string, DateRange> = {
   '2020s': { gte: '2020-01-01', lte: '2029-12-31' },
   '2010s': { gte: '2010-01-01', lte: '2019-12-31' },
   '2000s': { gte: '2000-01-01', lte: '2009-12-31' },

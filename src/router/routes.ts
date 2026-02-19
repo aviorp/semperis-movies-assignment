@@ -11,7 +11,7 @@ export default [
         name: 'home',
         component: () => import('@/pages/home-page.vue'),
         meta: {
-          title: 'Catalogue - Semperis Movies',
+          title: 'Catalog - Semperis Movies',
         },
       },
     ],

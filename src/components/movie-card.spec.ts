@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import MovieCard from './movie-card.vue'
-import type { MediaListItem } from '@/types'
+import type { MediaListItem, MediaType } from '@/types'
 
 const MOCK_MOVIE: MediaListItem = {
   id: 272,
@@ -20,7 +20,7 @@ const RouterLinkStub = {
   props: ['to'],
 }
 
-function mountCard(movie: MediaListItem = MOCK_MOVIE, mediaType: 'movie' | 'tv' = 'movie') {
+function mountCard(movie: MediaListItem = MOCK_MOVIE, mediaType: MediaType = 'movie') {
   return shallowMount(MovieCard, {
     props: { movie, mediaType },
     global: {

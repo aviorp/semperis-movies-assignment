@@ -10,7 +10,7 @@ const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
   useRoute: () => ({
     query: mockQuery.value,
-    meta: { title: 'Catalogue - Semperis Movies' },
+    meta: { title: 'Catalog - Semperis Movies' },
   }),
   useRouter: () => ({ push: mockPush }),
 }))
@@ -18,7 +18,9 @@ vi.mock('vue-router', () => ({
 vi.mock('@/api', () => ({
   api: {
     media: {
-      discover: vi.fn().mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      discover: vi
+        .fn()
+        .mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
       search: vi.fn().mockResolvedValue({ page: 1, results: [], total_pages: 0, total_results: 0 }),
       getDetails: vi.fn(),
       getGenres: vi.fn().mockResolvedValue({ genres: [] }),

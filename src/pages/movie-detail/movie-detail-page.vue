@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { computed, watch } from 'vue'
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useMoviesStore } from '@/stores/moviesStore'
 import { isMediaType } from '@/utils'
 import MediaHero from './components/media-hero.vue'
@@ -28,14 +28,9 @@ watch(
   },
   { immediate: true },
 )
-
-onBeforeRouteLeave(() => {
-  clearSelectedMedia()
-})
 </script>
 
 <template>
-  <!-- Loading State -->
   <div v-if="showSkeleton" class="min-h-screen">
     <USkeleton class="h-125 w-full" />
     <div class="mx-auto flex max-w-7xl gap-6 px-6 pt-8">
@@ -46,11 +41,7 @@ onBeforeRouteLeave(() => {
     </div>
   </div>
 
-  <!-- Error State -->
-  <div
-    v-else-if="error"
-    class="flex min-h-screen flex-col items-center justify-center gap-4 p-6"
-  >
+  <div v-else-if="error" class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
     <UAlert
       color="error"
       variant="subtle"
@@ -61,7 +52,6 @@ onBeforeRouteLeave(() => {
     <UButton label="Go Back" icon="i-lucide-arrow-left" variant="outline" @click="router.back" />
   </div>
 
-  <!-- Content -->
   <div v-else-if="media" class="flex min-h-screen flex-col">
     <MediaHero :media="media" />
     <MediaCast v-if="hasCast" :cast="cast" />

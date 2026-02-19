@@ -9,26 +9,25 @@ const { movie, mediaType } = defineProps<{
 }>()
 
 const imgFailed = ref(false)
-const id = computed(() => movie.id)
-const voteAverage = computed(() => movie.vote_average)
-const hasRating = computed(() => voteAverage.value > 0)
-const posterUrl = computed(() => getPosterUrl(movie.poster_path))
-const showPoster = computed(() => posterUrl.value !== '' && !imgFailed.value)
-const title = computed(() => getMediaTitle(movie))
-const year = computed(() => getMediaYear(movie))
-const rating = computed(() => voteAverage.value.toFixed(1))
+const hasRating = computed(() => movie.vote_average > 0)
+const showPoster = computed(() => getPosterUrl(movie.poster_path) !== '' && !imgFailed.value)
+const rating = computed(() => movie.vote_average.toFixed(1))
+
+function getMediaLabel(mediaType: MediaType): string {
+  return mediaType === 'tv' ? 'TV' : 'Movie'
+}
 </script>
 
 <template>
   <RouterLink
-    :to="{ name: 'media-detail', params: { mediaType, id } }"
+    :to="{ name: 'media-detail', params: { mediaType, id: movie.id } }"
     class="group flex flex-col overflow-hidden rounded-lg bg-muted/10 shadow-xl transition-transform hover:scale-105 hover:shadow-2xl"
   >
     <div class="relative aspect-2/3 w-full overflow-hidden bg-muted/10">
       <img
         v-if="showPoster"
-        :src="posterUrl"
-        :alt="title"
+        :src="getPosterUrl(movie.poster_path)"
+        :alt="getMediaTitle(movie)"
         class="h-full w-full object-cover transition-opacity group-hover:opacity-90"
         loading="lazy"
         @error="imgFailed = true"
@@ -47,17 +46,12 @@ const rating = computed(() => voteAverage.value.toFixed(1))
     </div>
 
     <div class="flex flex-1 flex-col gap-1 p-3">
-      <h3 class="line-clamp-1 text-sm font-semibold" :title="title">
-        {{ title }}
+      <h3 class="line-clamp-1 text-sm font-semibold" :title="getMediaTitle(movie)">
+        {{ getMediaTitle(movie) }}
       </h3>
       <div class="mt-auto flex items-center justify-between gap-2">
-        <span class="text-xs text-muted/80">{{ year }}</span>
-        <UBadge
-          :label="mediaType === 'tv' ? 'TV' : 'Movie'"
-          size="xs"
-          variant="subtle"
-          color="neutral"
-        />
+        <span class="text-xs text-muted/80">{{ getMediaYear(movie) }}</span>
+        <UBadge :label="getMediaLabel(mediaType)" size="xs" variant="subtle" color="neutral" />
       </div>
     </div>
   </RouterLink>

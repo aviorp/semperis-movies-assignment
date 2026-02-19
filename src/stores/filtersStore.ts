@@ -1,4 +1,4 @@
-import type { MediaType } from '@/types'
+import type { MediaType, QueryParams } from '@/types'
 import { extractQueryValue } from '@/utils'
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
@@ -33,7 +33,7 @@ export const useFiltersStore = defineStore('filters', () => {
       search.value !== '',
   )
 
-  function updateQuery(params: Record<string, string | undefined>) {
+  function updateQuery(params: QueryParams) {
     const query = { ...routeQuery.value }
     for (const [key, value] of Object.entries(params)) {
       if (value === undefined || value === '') {
